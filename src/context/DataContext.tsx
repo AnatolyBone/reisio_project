@@ -50,17 +50,7 @@ const getInitialData = (): AppData => ({
 
 export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [data, setData] = useState<AppData>(() => {
-    const stored = localStorage.getItem(DATA_KEY);
-    if (!stored) {
-      return getInitialData();
-    }
-    try {
-      return JSON.parse(stored) as AppData;
-    } catch {
-      return getInitialData();
-    }
-  });
+  const [data, setData] = useState<AppData>(getInitialData);
 
   useEffect(() => {
     localStorage.setItem(DATA_KEY, JSON.stringify(data));
@@ -94,13 +84,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       fetch(`${API_BASE}/payments`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
       fetch(`${API_BASE}/reminders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
     ]).then(([ordersData, expensesData, paymentsData, remindersData]) => {
-      setData(prev => ({
-        ...prev,
-        orders: ordersData.orders || prev.orders,
-        expenses: expensesData.expenses || prev.expenses,
-        payments: paymentsData.payments || prev.payments,
-        reminders: remindersData.reminders || prev.reminders,
-      }));
+      setData({
+        orders: Array.isArray(ordersData?.orders) ? ordersData.orders : [],
+        expenses: Array.isArray(expensesData?.expenses) ? expensesData.expenses : [],
+        payments: Array.isArray(paymentsData?.payments) ? paymentsData.payments : [],
+        reminders: Array.isArray(remindersData?.reminders) ? remindersData.reminders : [],
+      });
     });
   }, [user]);
 
