@@ -28,8 +28,6 @@ export function AdminPage() {
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replySending, setReplySending] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [replySending, setReplySending] = useState(false);
 
   useEffect(() => {
     if (!token) return;
