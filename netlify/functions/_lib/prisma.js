@@ -8,3 +8,5 @@ export const getPrisma = () => {
   }
   return prisma;
 };
+
+export const prismaClient = getPrisma();

@@ -29,6 +29,7 @@ Mini App для Telegram: ввод данных остается в боте, п
 - `JWT_SECRET` — секрет для JWT.
 - `VITE_API_BASE` — базовый путь API (по умолчанию `/api`).
 - `ALLOW_MANUAL_LOGIN` — разрешить вход по Telegram ID (для теста).
+- `WEBAPP_URL` — URL Mini App для кнопки в боте.
 
 ## Бэкенд (Netlify Functions + Postgres)
 
@@ -71,3 +72,12 @@ src/
 - `/отчёт` — доход за период, расходы, прибыль, ближайший платёж.
 - `/напоминания` — список обязательств + «Отметить оплачено».
 - `/помощь` — короткая справка, что всё в приложении.
+
+## Бот (интеграция с БД)
+
+Функция бота находится в `netlify/functions/bot.js` и принимает webhook от Telegram.
+
+1. В Telegram выставить webhook:
+   - `https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=https://<YOUR_NETLIFY>/api/bot`
+2. Бот сохраняет расходы/рейсы сразу в Postgres через Prisma.
+3. Состояние диалога хранится в БД (`User.botState`), поэтому работает в Netlify Functions.

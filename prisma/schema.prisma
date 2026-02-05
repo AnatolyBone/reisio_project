@@ -17,6 +17,11 @@ model User {
   displayName String
   role       String
   company    String?
+  botState   String?
+  botDraftAmount Int?
+  botDraftType String?
+  botDraftCost Int?
+  botDraftDistance Int?
   createdAt  DateTime @default(now())
   lastLogin  DateTime @updatedAt
 

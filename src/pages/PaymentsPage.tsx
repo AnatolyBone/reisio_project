@@ -506,6 +506,7 @@ export function PaymentsPage() {
             <option value="leasing">Лизинг</option>
             <option value="insurance">Страхование</option>
             <option value="tax">Налоги</option>
+            <option value="repair">Ремонт</option>
             <option value="other">Другое</option>
           </select>
           <select

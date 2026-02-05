@@ -22,7 +22,7 @@ export interface Expense {
 export interface Payment {
   id: string;
   date: string;
-  type: 'leasing' | 'insurance' | 'tax' | 'other';
+  type: 'leasing' | 'insurance' | 'tax' | 'repair' | 'other';
   amount: number;
   status: 'pending' | 'paid' | 'overdue';
   description: string;
