@@ -3,35 +3,36 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id         Int      @id
-  firstName  String
-  lastName   String?
-  username   String?
-  photoUrl   String?
-  displayName String
-  role       String
-  company    String?
-  botState   String?
-  botDraftAmount Int?
-  botDraftType String?
-  botDraftCost Int?
+  id               Int      @id
+  firstName        String
+  lastName         String?
+  username         String?
+  photoUrl         String?
+  displayName      String
+  role             String
+  company          String?
+  botState         String?
+  botDraftAmount   Int?
+  botDraftType     String?
+  botDraftCost     Int?
   botDraftDistance Int?
-  createdAt  DateTime @default(now())
-  lastLogin  DateTime @updatedAt
+  createdAt        DateTime @default(now())
+  lastLogin        DateTime @updatedAt
 
-  orders     Order[]
-  expenses   Expense[]
-  payments   Payment[]
-  reminders  Reminder[]
-  settings   Settings?
-  adminRole  AdminRole?
-  plan       UserPlan?
+  orders        Order[]
+  expenses      Expense[]
+  payments      Payment[]
+  reminders     Reminder[]
+  settings      Settings?
+  adminRole     AdminRole?
+  plan          UserPlan?
+  supportTickets SupportTicket[]
 }
 
 model Order {
@@ -46,7 +47,7 @@ model Order {
   profit      Int
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Expense {
@@ -60,7 +61,7 @@ model Expense {
   pricePerLiter Float?
   createdAt     DateTime @default(now())
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Payment {
@@ -73,7 +74,7 @@ model Payment {
   description String
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Reminder {
@@ -85,7 +86,7 @@ model Reminder {
   amount    Int?
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Settings {
@@ -97,7 +98,7 @@ model Settings {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  user          User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model AdminRole {
@@ -105,7 +106,7 @@ model AdminRole {
   userId    Int      @unique
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model UserPlan {
@@ -114,7 +115,7 @@ model UserPlan {
   plan      String
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model ReminderSetting {
@@ -141,5 +142,5 @@ model SupportTicket {
   status    String   @default("open")
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
