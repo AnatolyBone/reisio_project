@@ -2,13 +2,12 @@ import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  DollarSign,
+  RussianRuble,
   Bell,
   ArrowRight,
   Fuel,
   Truck,
-  CalendarClock,
-  HelpCircle
+  CalendarClock
 } from 'lucide-react';
 import { KPICard } from '../components/KPICard';
 import { ReminderCard } from '../components/ReminderCard';
@@ -18,14 +17,12 @@ import { useData } from '../context/DataContext';
 import { useNavigation } from '../context/NavigationContext';
 import { isSameDay, isSameWeek, isSameMonth, parseISO } from 'date-fns';
 import { getAverageFuelPer100Km, getNearestPayment } from '../utils/analytics';
-import { Modal } from '../components/Modal';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 export function HomePage() {
   const { profile } = useAuth();
   const { kpi, reminders, monthlyIncomeData, orders, expenses, payments } = useData();
   const { navigate } = useNavigation();
-  const [helpOpen, setHelpOpen] = useState(false);
   const today = new Date();
 
   const todayIncome = orders
@@ -52,22 +49,13 @@ export function HomePage() {
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-            Добро пожаловать, {profile.displayName}! 👋
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            Обзор ваших финансов на сегодня
-          </p>
-        </div>
-        <button
-          onClick={() => setHelpOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-        >
-          <HelpCircle className="w-4 h-4" />
-          Помощь
-        </button>
+      <div className="space-y-1">
+        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+          Добро пожаловать, {profile.displayName}! 👋
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          Обзор ваших финансов на сегодня
+        </p>
       </div>
 
       {!hasAnyData && (
@@ -116,7 +104,7 @@ export function HomePage() {
               Добавить расход
             </button>
             <button
-              onClick={() => setHelpOpen(true)}
+              onClick={() => navigate('settings')}
               className="flex-1 px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
             >
               Как пользоваться
@@ -137,7 +125,7 @@ export function HomePage() {
         <KPICard
           title="Доход за неделю"
           value={`${(weekIncome / 1000).toFixed(0)}K ₽`}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<RussianRuble className="w-5 h-5" />}
           variant="default"
           onClick={() => navigate('finances')}
         />
@@ -175,7 +163,7 @@ export function HomePage() {
         <KPICard
           title="Чистая прибыль"
           value={`${(kpi.totalProfit / 1000).toFixed(0)}K ₽`}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<RussianRuble className="w-5 h-5" />}
           variant="success"
           onClick={() => navigate('costs')}
         />
@@ -296,28 +284,6 @@ export function HomePage() {
         </button>
       </div>
 
-      <Modal
-        title="Помощь"
-        isOpen={helpOpen}
-        onClose={() => setHelpOpen(false)}
-        footer={
-          <div className="flex justify-end">
-            <button
-              onClick={() => setHelpOpen(false)}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-            >
-              Понятно
-            </button>
-          </div>
-        }
-      >
-        <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
-          <p>1. Добавьте рейс или расход — данные сразу появятся в отчётах.</p>
-          <p>2. Раздел "Себестоимость" покажет, куда уходят деньги.</p>
-          <p>3. Напоминания и платежи держат под контролем обязательства.</p>
-          <p>4. Если нужен бот — используйте /start и кнопку "Открыть приложение".</p>
-        </div>
-      </Modal>
     </div>
   );
 }

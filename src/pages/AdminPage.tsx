@@ -24,6 +24,8 @@ export function AdminPage() {
   const [admins, setAdmins] = useState<{ userId: number }[]>([]);
   const [knownUsers, setKnownUsers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -140,6 +142,33 @@ export function AdminPage() {
         <p className="text-gray-500 dark:text-gray-400">
           Управление администраторами, пользователями и шаблонами
         </p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Пользователи</p>
+          <p className="text-xl font-bold text-gray-900 dark:text-white">
+            {knownUsers.length}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Активные 7 дней</p>
+          <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+            {knownUsers.filter(user => Date.now() - new Date(user.lastLogin).getTime() < 7 * 24 * 60 * 60 * 1000).length}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Платные</p>
+          <p className="text-xl font-bold text-blue-600 dark:text-blue-400">
+            {Object.values(userPlans).filter(plan => plan === 'paid').length}
+          </p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 border border-gray-100 dark:border-gray-700">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Открытые тикеты</p>
+          <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+            {tickets.filter(ticket => ticket.status === 'open').length}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -320,7 +349,15 @@ export function AdminPage() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Тикетов пока нет.</p>
           )}
           {tickets.map(ticket => (
-            <div key={ticket.id} className="p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+            <button
+              key={ticket.id}
+              type="button"
+              onClick={() => {
+                setSelectedTicket(ticket);
+                setTicketOpen(true);
+              }}
+              className="w-full text-left p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40"
+            >
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">{ticket.subject}</p>
@@ -331,6 +368,7 @@ export function AdminPage() {
                 <select
                   value={ticket.status}
                   onChange={(e) => {
+                    e.stopPropagation();
                     if (!token) return;
                     const status = e.target.value;
                     fetch(`${API_BASE}/admin-tickets`, {
@@ -341,6 +379,7 @@ export function AdminPage() {
                       setTickets(prev => prev.map(item => item.id === ticket.id ? { ...item, status } : item));
                     });
                   }}
+                  onClick={(e) => e.stopPropagation()}
                   className="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                 >
                   <option value="open">Открыт</option>
@@ -351,10 +390,39 @@ export function AdminPage() {
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
                 {ticket.message}
               </p>
-            </div>
+            </button>
           ))}
         </div>
       </div>
+
+      <Modal
+        title="Тикет поддержки"
+        isOpen={ticketOpen}
+        onClose={() => setTicketOpen(false)}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setTicketOpen(false)}
+              className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300"
+            >
+              Закрыть
+            </button>
+          </div>
+        }
+      >
+        {selectedTicket && (
+          <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+            <p className="font-medium text-gray-900 dark:text-white">
+              {selectedTicket.subject}
+            </p>
+            <p>
+              От: {selectedTicket.user?.displayName || selectedTicket.user?.firstName || 'Пользователь'} (ID {selectedTicket.user?.id || selectedTicket.userId})
+            </p>
+            <p>Дата: {new Date(selectedTicket.createdAt).toLocaleString('ru-RU')}</p>
+            <p className="whitespace-pre-wrap">{selectedTicket.message}</p>
+          </div>
+        )}
+      </Modal>
 
       <div className="bg-white dark:bg-gray-800 neutral:bg-stone-50 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between gap-4 mb-4">

@@ -159,7 +159,7 @@ export function ExpensesPage() {
       </div>
 
       {/* Filter Chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+      <div className="flex flex-wrap gap-2">
         {expenseTypes.map((type) => {
           const Icon = type.icon;
           const isActive = selectedType === type.id;
@@ -168,7 +168,7 @@ export function ExpensesPage() {
               key={type.id}
               onClick={() => setSelectedType(type.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all border",
+                "flex items-center gap-2 px-3 py-2 rounded-xl whitespace-nowrap transition-all border text-sm",
                 isActive
                   ? `${colorClasses[type.color].bg} ${colorClasses[type.color].text} ${colorClasses[type.color].border}`
                   : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-gray-300"

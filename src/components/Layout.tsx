@@ -9,9 +9,11 @@ import {
   Settings,
   Menu,
   X,
-  ShieldCheck
+  ShieldCheck,
+  HelpCircle
 } from 'lucide-react';
 import { cn } from '../utils/cn';
+import { Modal } from './Modal';
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,6 +34,7 @@ const baseNavItems = [
 
 export function Layout({ children, currentPage, onNavigate, isAdmin = false }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const navItems = useMemo(() => {
     if (!isAdmin) return baseNavItems;
     return [...baseNavItems, { id: 'admin', label: 'Админка', icon: ShieldCheck }];
@@ -50,12 +53,20 @@ export function Layout({ children, currentPage, onNavigate, isAdmin = false }: L
             <Truck className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             <span className="font-semibold text-gray-900 dark:text-white">ФинПомощник</span>
           </div>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setHelpOpen(true)}
+              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
         
         {/* Mobile Menu */}
@@ -118,8 +129,8 @@ export function Layout({ children, currentPage, onNavigate, isAdmin = false }: L
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 lg:ml-64">
-          <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+        <main className="flex-1 lg:ml-64 min-w-0">
+          <div className="p-4 lg:p-8 max-w-7xl mx-auto w-full">
             {children}
           </div>
         </main>
@@ -145,6 +156,29 @@ export function Layout({ children, currentPage, onNavigate, isAdmin = false }: L
           ))}
         </div>
       </nav>
+
+      <Modal
+        title="Помощь"
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        footer={
+          <div className="flex justify-end">
+            <button
+              onClick={() => setHelpOpen(false)}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Понятно
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+          <p>1. Добавьте рейс или расход — данные сразу появятся в отчётах.</p>
+          <p>2. Раздел "Себестоимость" покажет, куда уходят деньги.</p>
+          <p>3. Напоминания и платежи держат под контролем обязательства.</p>
+          <p>4. Если нужен бот — используйте /start и кнопку "Открыть приложение".</p>
+        </div>
+      </Modal>
     </div>
   );
 }
