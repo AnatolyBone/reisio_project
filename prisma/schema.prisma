@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id
+  firstName  String
+  lastName   String?
+  username   String?
+  photoUrl   String?
+  displayName String
+  role       String
+  company    String?
+  createdAt  DateTime @default(now())
+  lastLogin  DateTime @updatedAt
+
+  orders     Order[]
+  expenses   Expense[]
+  payments   Payment[]
+  reminders  Reminder[]
+  settings   Settings?
+  adminRole  AdminRole?
+  plan       UserPlan?
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      Int
+  date        DateTime
+  client      String
+  route       String
+  distance    Int
+  cost        Int
+  fuelExpense Int
+  profit      Int
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Expense {
+  id            String   @id @default(uuid())
+  userId        Int
+  date          DateTime
+  type          String
+  amount        Int
+  description   String
+  liters        Float?
+  pricePerLiter Float?
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  userId      Int
+  date        DateTime
+  type        String
+  amount      Int
+  status      String
+  description String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Reminder {
+  id        String   @id @default(uuid())
+  userId    Int
+  type      String
+  title     String
+  dueDate   DateTime
+  amount    Int?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Settings {
+  id            String   @id @default(uuid())
+  userId        Int      @unique
+  theme         String
+  notifications Boolean
+  reportPeriod  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model AdminRole {
+  id        String   @id @default(uuid())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model UserPlan {
+  id        String   @id @default(uuid())
+  userId    Int      @unique
+  plan      String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ReminderSetting {
+  id         String   @id @default(uuid())
+  enabled    Boolean  @default(true)
+  daysBefore Int      @default(3)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model MessageTemplate {
+  id        String   @id @default(uuid())
+  title     String
+  type      String
+  text      String
+  createdAt DateTime @default(now())
+}
