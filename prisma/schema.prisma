@@ -140,6 +140,8 @@ model SupportTicket {
   subject   String
   message   String
   status    String   @default("open")
+  reply     String?
+  repliedAt DateTime?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])

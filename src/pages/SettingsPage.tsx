@@ -3,15 +3,19 @@ import { useTheme } from '../context/ThemeContext';
 import { cn } from '../utils/cn';
 import { Theme } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { Modal } from '../components/Modal';
 import { useEffect, useState } from 'react';
 
 export function SettingsPage() {
   const { theme, settings, setTheme, updateSettings } = useTheme();
   const { profile, updateProfile } = useAuth();
+  const { orders } = useData();
   const [profileOpen, setProfileOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportForm, setSupportForm] = useState({ subject: '', message: '' });
+  const [supportSending, setSupportSending] = useState(false);
+  const [supportSent, setSupportSent] = useState(false);
   const [profileForm, setProfileForm] = useState({
     displayName: profile.displayName,
     role: profile.role,
@@ -70,18 +74,16 @@ export function SettingsPage() {
             <Edit2 className="w-4 h-4" />
           </button>
         </div>
-        <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-3 gap-4">
+        <div className="mt-4 pt-4 border-t border-white/20 grid grid-cols-2 gap-4">
           <div>
             <p className="text-blue-100 text-sm">Заказов</p>
-            <p className="text-lg font-semibold">124</p>
+            <p className="text-lg font-semibold">{orders.length}</p>
           </div>
           <div>
             <p className="text-blue-100 text-sm">Пробег</p>
-            <p className="text-lg font-semibold">45.2K км</p>
-          </div>
-          <div>
-            <p className="text-blue-100 text-sm">Рейтинг</p>
-            <p className="text-lg font-semibold">4.9 ⭐</p>
+            <p className="text-lg font-semibold">
+              {orders.reduce((sum, order) => sum + order.distance, 0).toLocaleString('ru-RU')} км
+            </p>
           </div>
         </div>
       </div>
@@ -181,7 +183,7 @@ export function SettingsPage() {
               onClick={() => {
                 const botUsername = import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined;
                 if (!botUsername) return;
-                const tgLink = `https://t.me/${botUsername}?startapp=finance`;
+                const tgLink = `https://t.me/${botUsername}`;
                 if (window.Telegram?.WebApp?.openTelegramLink) {
                   window.Telegram.WebApp.openTelegramLink(tgLink);
                 } else {
@@ -190,7 +192,7 @@ export function SettingsPage() {
               }}
               className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors"
             >
-              Открыть
+              Открыть чат
             </button>
           </div>
         </div>
@@ -321,6 +323,8 @@ export function SettingsPage() {
               onClick={() => {
                 const token = localStorage.getItem('fa_token');
                 if (!token) return;
+                if (supportSending) return;
+                setSupportSending(true);
                 fetch(`${import.meta.env.VITE_API_BASE || '/api'}/support`, {
                   method: 'POST',
                   headers: {
@@ -330,12 +334,21 @@ export function SettingsPage() {
                   body: JSON.stringify(supportForm),
                 }).then(() => {
                   setSupportForm({ subject: '', message: '' });
-                  setSupportOpen(false);
+                  setSupportSending(false);
+                  setSupportSent(true);
+                  setTimeout(() => {
+                    setSupportSent(false);
+                    setSupportOpen(false);
+                  }, 1200);
                 });
               }}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              disabled={supportSending}
+              className={cn(
+                "px-4 py-2 rounded-lg text-white",
+                supportSending ? "bg-blue-400 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
+              )}
             >
-              Отправить
+              {supportSending ? "Отправляем..." : "Отправить"}
             </button>
           </div>
         }
@@ -355,6 +368,11 @@ export function SettingsPage() {
             rows={4}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
           />
+          {supportSent && (
+            <p className="text-sm text-emerald-600 dark:text-emerald-400">
+              Тикет отправлен. Мы скоро ответим.
+            </p>
+          )}
         </div>
       </Modal>
     </div>

@@ -26,6 +26,10 @@ export function AdminPage() {
   const [tickets, setTickets] = useState<any[]>([]);
   const [ticketOpen, setTicketOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+  const [replyText, setReplyText] = useState('');
+  const [replySending, setReplySending] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replySending, setReplySending] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -407,6 +411,37 @@ export function AdminPage() {
             >
               Закрыть
             </button>
+            <button
+              onClick={() => {
+                if (!selectedTicket || !token) return;
+                if (!replyText.trim() || replySending) return;
+                setReplySending(true);
+                fetch(`${API_BASE}/admin-tickets`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                  body: JSON.stringify({ id: selectedTicket.id, status: selectedTicket.status, reply: replyText }),
+                }).then(() => {
+                  setTickets(prev =>
+                    prev.map(item =>
+                      item.id === selectedTicket.id
+                        ? { ...item, reply: replyText, repliedAt: new Date().toISOString() }
+                        : item
+                    )
+                  );
+                  setSelectedTicket((prev: any) =>
+                    prev ? { ...prev, reply: replyText, repliedAt: new Date().toISOString() } : prev
+                  );
+                  setReplyText('');
+                  setReplySending(false);
+                });
+              }}
+              className={cn(
+                "px-4 py-2 rounded-lg text-white",
+                replySending ? "bg-blue-400 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
+              )}
+            >
+              {replySending ? 'Отправляем...' : 'Ответить'}
+            </button>
           </div>
         }
       >
@@ -420,6 +455,22 @@ export function AdminPage() {
             </p>
             <p>Дата: {new Date(selectedTicket.createdAt).toLocaleString('ru-RU')}</p>
             <p className="whitespace-pre-wrap">{selectedTicket.message}</p>
+            {selectedTicket.reply && (
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800 p-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ответ поддержки</p>
+                <p className="whitespace-pre-wrap">{selectedTicket.reply}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-xs text-gray-500 dark:text-gray-400">Ответ пользователю</label>
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                rows={3}
+                placeholder="Напишите ответ..."
+                className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm text-gray-900 dark:text-white"
+              />
+            </div>
           </div>
         )}
       </Modal>
