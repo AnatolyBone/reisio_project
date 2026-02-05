@@ -90,6 +90,7 @@ export const handler = async (event) => {
           type: reminder.type,
           dueDate: new Date(reminder.dueDate),
           amount: reminder.amount ? Number(reminder.amount) : null,
+          notifyBefore: reminder.notifyBefore || "1_day",
         },
         create: {
           id: reminder.id,
@@ -98,6 +99,7 @@ export const handler = async (event) => {
           type: reminder.type,
           dueDate: new Date(reminder.dueDate),
           amount: reminder.amount ? Number(reminder.amount) : null,
+          notifyBefore: reminder.notifyBefore || "1_day",
         },
       })
     ),

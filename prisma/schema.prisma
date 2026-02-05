@@ -29,6 +29,7 @@ model User {
   expenses      Expense[]
   payments      Payment[]
   reminders     Reminder[]
+  vehicles      Vehicle[]
   settings      Settings?
   adminRole     AdminRole?
   plan          UserPlan?
@@ -78,13 +79,28 @@ model Payment {
 }
 
 model Reminder {
-  id        String   @id @default(uuid())
-  userId    Int
-  type      String
-  title     String
-  dueDate   DateTime
-  amount    Int?
-  createdAt DateTime @default(now())
+  id              String    @id @default(uuid())
+  userId          Int
+  type            String
+  title           String
+  dueDate         DateTime
+  amount          Int?
+  notifyBefore    String    @default("1_day") // at_time, 1_hour, 1_day, 3_days, 1_week
+  reminderSentAt  DateTime?
+  createdAt       DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Vehicle {
+  id                    String   @id @default(uuid())
+  userId                Int
+  name                  String   // e.g. "MAN TGX", "КАМАЗ"
+  fuelConsumptionPer100 Float    // л/100 км
+  fuelPricePerLiter     Int      // руб/л
+  depreciationPer1000   Int      // амортизация за 1000 км, руб
+  foodParkingPer1000    Int      @default(2000) // еда/стоянки за 1000 км, руб
+  createdAt             DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }

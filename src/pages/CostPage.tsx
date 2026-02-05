@@ -1,16 +1,38 @@
 import { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Wallet, Fuel, CreditCard, Wrench, TrendingUp } from 'lucide-react';
+import { Wallet, Fuel, CreditCard, Wrench, TrendingUp, Calculator } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useVehicles } from '../context/VehiclesContext';
 import { cn } from '../utils/cn';
 import { parseISO, isSameMonth, isSameWeek } from 'date-fns';
 
 type Period = 'week' | 'month';
 
+function calcTrip(rate: number, distance: number, vehicle: { fuelConsumptionPer100: number; fuelPricePerLiter: number; depreciationPer1000: number; foodParkingPer1000: number }) {
+  if (distance <= 0) return null;
+  const fuelCost = (distance / 100) * vehicle.fuelConsumptionPer100 * vehicle.fuelPricePerLiter;
+  const depreciation = (distance / 1000) * vehicle.depreciationPer1000;
+  const foodParking = (distance / 1000) * vehicle.foodParkingPer1000;
+  const totalCost = fuelCost + depreciation + foodParking;
+  const net = rate - totalCost;
+  const perKm = net / distance;
+  return { fuelCost: Math.round(fuelCost), depreciation: Math.round(depreciation), foodParking: Math.round(foodParking), totalCost: Math.round(totalCost), net: Math.round(net), perKm: Math.round(perKm * 10) / 10 };
+}
+
 export function CostPage() {
   const { orders, expenses } = useData();
+  const { vehicles } = useVehicles();
   const [period, setPeriod] = useState<Period>('month');
+  const [rate, setRate] = useState('');
+  const [distance, setDistance] = useState('');
+  const [vehicleId, setVehicleId] = useState('');
   const today = new Date();
+
+  const selectedVehicle = vehicleId ? vehicles.find((v) => v.id === vehicleId) : vehicles[0] ?? null;
+  const rateNum = Number(rate) || 0;
+  const distanceNum = Number(distance) || 0;
+  const tripResult = selectedVehicle && rateNum > 0 && distanceNum > 0 ? calcTrip(rateNum, distanceNum, selectedVehicle) : null;
+  const isProfitable = tripResult ? tripResult.net > 0 : null;
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order =>
@@ -48,6 +70,97 @@ export function CostPage() {
 
   return (
     <div className="space-y-6 pb-20 lg:pb-0">
+      {/* Калькулятор «Стоит ли брать груз?» */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <Calculator className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Стоит ли брать груз?
+          </h2>
+        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Введите ставку и расстояние — учтём топливо, амортизацию и еду/стоянки.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          {vehicles.length > 0 && (
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Авто</label>
+              <select
+                value={vehicleId || (vehicles[0]?.id ?? '')}
+                onChange={(e) => setVehicleId(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+              >
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Ставка, ₽</label>
+            <input
+              type="number"
+              min="0"
+              placeholder="50 000"
+              value={rate}
+              onChange={(e) => setRate(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Расстояние, км</label>
+            <input
+              type="number"
+              min="0"
+              placeholder="1000"
+              value={distance}
+              onChange={(e) => setDistance(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+            />
+          </div>
+        </div>
+        {vehicles.length === 0 && (
+          <p className="text-sm text-amber-600 dark:text-amber-400 mb-4">
+            Добавьте авто в разделе «Мои авто», чтобы считать.
+          </p>
+        )}
+        {tripResult && (
+          <div className="rounded-xl bg-gray-50 dark:bg-gray-900/50 p-4 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Топливо</span>
+              <span className="text-red-600 dark:text-red-400">−{tripResult.fuelCost.toLocaleString('ru-RU')} ₽</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Амортизация</span>
+              <span className="text-red-600 dark:text-red-400">−{tripResult.depreciation.toLocaleString('ru-RU')} ₽</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Еда/Стоянки</span>
+              <span className="text-red-600 dark:text-red-400">−{tripResult.foodParking.toLocaleString('ru-RU')} ₽</span>
+            </div>
+            <div className="flex justify-between font-medium pt-2 border-t border-gray-200 dark:border-gray-700">
+              <span className="text-gray-700 dark:text-gray-300">Итого чистыми</span>
+              <span className={tripResult.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
+                {tripResult.net.toLocaleString('ru-RU')} ₽ ({tripResult.perKm} ₽/км)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 pt-2">
+              {isProfitable ? (
+                <>
+                  <span className="text-2xl">🟢</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Выгодно</span>
+                </>
+              ) : tripResult !== null ? (
+                <>
+                  <span className="text-2xl">🔴</span>
+                  <span className="font-semibold text-red-600 dark:text-red-400">Невыгодно</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">

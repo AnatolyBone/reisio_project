@@ -1,6 +1,7 @@
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import { VehiclesProvider } from './context/VehiclesContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
@@ -8,6 +9,7 @@ import { FinancesPage } from './pages/FinancesPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { ExpensesPage } from './pages/ExpensesPage';
 import { PaymentsPage } from './pages/PaymentsPage';
+import { VehiclesPage } from './pages/VehiclesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
 import { AuthPage } from './pages/AuthPage';
@@ -33,6 +35,8 @@ function AppContent() {
         return <ExpensesPage />;
       case 'payments':
         return <PaymentsPage />;
+      case 'vehicles':
+        return <VehiclesPage />;
       case 'costs':
         return <CostPage />;
       case 'settings':
@@ -56,9 +60,11 @@ export function App() {
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <NavigationProvider>
-            <AppContent />
-          </NavigationProvider>
+          <VehiclesProvider>
+            <NavigationProvider>
+              <AppContent />
+            </NavigationProvider>
+          </VehiclesProvider>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Reminder" ADD COLUMN IF NOT EXISTS "notifyBefore" TEXT NOT NULL DEFAULT '1_day';
+ALTER TABLE "Reminder" ADD COLUMN IF NOT EXISTS "reminderSentAt" TIMESTAMP(3);

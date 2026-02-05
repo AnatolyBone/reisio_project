@@ -4,6 +4,7 @@ import {
   BarChart3,
   Calculator,
   Truck, 
+  Car,
   Fuel, 
   Calendar, 
   Settings,
@@ -26,6 +27,7 @@ const baseNavItems = [
   { id: 'home', label: 'Главная', icon: Home },
   { id: 'finances', label: 'Финансы', icon: BarChart3 },
   { id: 'costs', label: 'Себестоимость', icon: Calculator },
+  { id: 'vehicles', label: 'Мои авто', icon: Car },
   { id: 'orders', label: 'Заказы', icon: Truck },
   { id: 'expenses', label: 'Расходы', icon: Fuel },
   { id: 'payments', label: 'Платежи', icon: Calendar },
@@ -40,7 +42,7 @@ export function Layout({ children, currentPage, onNavigate, isAdmin = false }: L
     return [...baseNavItems, { id: 'admin', label: 'Админка', icon: ShieldCheck }];
   }, [isAdmin]);
   const bottomNavItems = useMemo(
-    () => navItems.filter(item => ['home', 'finances', 'costs', 'orders', 'payments'].includes(item.id)),
+    () => navItems.filter(item => ['home', 'finances', 'costs', 'vehicles', 'orders', 'payments'].includes(item.id)),
     [navItems]
   );
 
@@ -174,9 +176,10 @@ export function Layout({ children, currentPage, onNavigate, isAdmin = false }: L
       >
         <div className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
           <p>1. Добавьте рейс или расход — данные сразу появятся в отчётах.</p>
-          <p>2. Раздел "Себестоимость" покажет, куда уходят деньги.</p>
-          <p>3. Напоминания и платежи держат под контролем обязательства.</p>
-          <p>4. Если нужен бот — используйте /start и кнопку "Открыть приложение".</p>
+          <p>2. «Мои авто» — настройте профиль машины (расход, амортизация).</p>
+          <p>3. «Стоит ли брать груз?» — введите ставку и км, получите вердикт: выгодно или нет.</p>
+          <p>4. Напоминания и платежи держат под контролем обязательства.</p>
+          <p>5. В боте есть кнопка «Стоит ли груз?» — тот же расчёт из Telegram.</p>
         </div>
       </Modal>
     </div>

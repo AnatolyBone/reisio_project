@@ -247,6 +247,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const fetchReminders = () => {
+    const token = localStorage.getItem('fa_token');
+    const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+    if (!token || !user) return;
+    fetch(`${API_BASE}/reminders`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data?.reminders) ? data.reminders : [];
+        setData(prev => ({ ...prev, reminders: list }));
+      });
+  };
+
   const addReminder = (reminder: Reminder) => {
     const token = localStorage.getItem('fa_token');
     const API_BASE = import.meta.env.VITE_API_BASE || '/api';
@@ -261,7 +273,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         if (data.reminder) {
           setData(prev => ({ ...prev, reminders: [data.reminder, ...prev.reminders] }));
         }
-      });
+        fetchReminders();
+      })
+      .catch(() => fetchReminders());
   };
   const updateReminder = (reminder: Reminder) => {
     const token = localStorage.getItem('fa_token');
@@ -280,7 +294,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
             reminders: prev.reminders.map(item => (item.id === data.reminder.id ? data.reminder : item)),
           }));
         }
-      });
+        fetchReminders();
+      })
+      .catch(() => fetchReminders());
   };
   const deleteReminder = (id: string) => {
     const token = localStorage.getItem('fa_token');
@@ -292,7 +308,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ id }),
     }).then(() => {
       setData(prev => ({ ...prev, reminders: prev.reminders.filter(item => item.id !== id) }));
-    });
+      fetchReminders();
+    }).catch(() => fetchReminders());
   };
 
   const resetData = () => setData(getInitialData());

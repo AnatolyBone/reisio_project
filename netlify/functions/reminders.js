@@ -14,7 +14,16 @@ export const handler = async (event) => {
       where: { userId },
       orderBy: { dueDate: "asc" },
     });
-    return json(200, { reminders });
+    return json(200, {
+      reminders: reminders.map((r) => ({
+        id: r.id,
+        type: r.type,
+        title: r.title,
+        dueDate: r.dueDate.toISOString().slice(0, 10),
+        amount: r.amount,
+        notifyBefore: r.notifyBefore || "1_day",
+      })),
+    });
   }
 
   const body = event.body ? JSON.parse(event.body) : {};
@@ -27,9 +36,19 @@ export const handler = async (event) => {
         type: body.type,
         dueDate: new Date(body.dueDate),
         amount: body.amount ? Number(body.amount) : null,
+        notifyBefore: body.notifyBefore || "1_day",
       },
     });
-    return json(200, { reminder });
+    return json(200, {
+      reminder: {
+        id: reminder.id,
+        type: reminder.type,
+        title: reminder.title,
+        dueDate: reminder.dueDate.toISOString().slice(0, 10),
+        amount: reminder.amount,
+        notifyBefore: reminder.notifyBefore || "1_day",
+      },
+    });
   }
 
   if (event.httpMethod === "PUT") {
@@ -40,9 +59,19 @@ export const handler = async (event) => {
         type: body.type,
         dueDate: new Date(body.dueDate),
         amount: body.amount ? Number(body.amount) : null,
+        notifyBefore: body.notifyBefore ?? undefined,
       },
     });
-    return json(200, { reminder });
+    return json(200, {
+      reminder: {
+        id: reminder.id,
+        type: reminder.type,
+        title: reminder.title,
+        dueDate: reminder.dueDate.toISOString().slice(0, 10),
+        amount: reminder.amount,
+        notifyBefore: reminder.notifyBefore || "1_day",
+      },
+    });
   }
 
   if (event.httpMethod === "DELETE") {

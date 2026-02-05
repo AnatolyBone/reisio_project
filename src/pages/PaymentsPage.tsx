@@ -32,8 +32,9 @@ export function PaymentsPage() {
   const [reminderForm, setReminderForm] = useState({
     title: '',
     type: 'leasing',
-    dueDate: '',
+    dueDate: new Date().toISOString().slice(0, 10),
     amount: '',
+    notifyBefore: '1_day' as const,
   });
 
   useEffect(() => {
@@ -101,6 +102,7 @@ export function PaymentsPage() {
       type: 'leasing',
       dueDate: new Date().toISOString().slice(0, 10),
       amount: '',
+      notifyBefore: '1_day',
     });
   };
 
@@ -112,6 +114,7 @@ export function PaymentsPage() {
         type: reminder.type,
         dueDate: reminder.dueDate,
         amount: reminder.amount ? String(reminder.amount) : '',
+        notifyBefore: (reminder.notifyBefore || '1_day') as 'at_time' | '1_hour' | '1_day' | '3_days' | '1_week',
       });
     } else {
       setEditingReminder(null);
@@ -123,6 +126,7 @@ export function PaymentsPage() {
   const handleSaveReminder = () => {
     if (!reminderForm.title || !reminderForm.dueDate) return;
     const amount = reminderForm.amount ? Number(reminderForm.amount) : undefined;
+    const notifyBefore = reminderForm.notifyBefore || '1_day';
     if (editingReminder) {
       updateReminder({
         ...editingReminder,
@@ -130,6 +134,7 @@ export function PaymentsPage() {
         type: reminderForm.type as typeof editingReminder.type,
         dueDate: reminderForm.dueDate,
         amount,
+        notifyBefore,
       });
     } else {
       addReminder({
@@ -138,6 +143,7 @@ export function PaymentsPage() {
         type: reminderForm.type as typeof reminders[number]['type'],
         dueDate: reminderForm.dueDate,
         amount,
+        notifyBefore,
       });
     }
     setReminderModalOpen(false);
@@ -580,6 +586,17 @@ export function PaymentsPage() {
             onChange={(e) => setReminderForm(prev => ({ ...prev, dueDate: e.target.value }))}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
           />
+          <select
+            value={reminderForm.notifyBefore}
+            onChange={(e) => setReminderForm(prev => ({ ...prev, notifyBefore: e.target.value as typeof prev.notifyBefore }))}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+          >
+            <option value="at_time">В момент наступления</option>
+            <option value="1_hour">За 1 час</option>
+            <option value="1_day">За 1 день</option>
+            <option value="3_days">За 3 дня</option>
+            <option value="1_week">За неделю</option>
+          </select>
           <input
             type="number"
             placeholder="Сумма (опционально)"

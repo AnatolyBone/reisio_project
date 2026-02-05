@@ -28,12 +28,15 @@ export interface Payment {
   description: string;
 }
 
+export type NotifyBefore = 'at_time' | '1_hour' | '1_day' | '3_days' | '1_week';
+
 export interface Reminder {
   id: string;
   type: 'leasing' | 'maintenance' | 'fine' | 'insurance';
   title: string;
   dueDate: string;
   amount?: number;
+  notifyBefore?: NotifyBefore;
 }
 
 export interface KPIData {
@@ -43,6 +46,15 @@ export interface KPIData {
   monthlyExpenses: number;
   budgetRemaining: number;
   totalProfit: number;
+}
+
+export interface Vehicle {
+  id: string;
+  name: string;
+  fuelConsumptionPer100: number;
+  fuelPricePerLiter: number;
+  depreciationPer1000: number;
+  foodParkingPer1000: number;
 }
 
 export type Theme = 'light' | 'dark' | 'neutral';

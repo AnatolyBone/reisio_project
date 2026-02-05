@@ -13,6 +13,7 @@ const mainMenu = {
   reply_markup: {
     keyboard: [
       ["🚚 Новый рейс", "⛽ Расход"],
+      ["🧮 Стоит ли брать груз?"],
       ["💰 Баланс", "⚙️ Профиль"],
       ["🆘 Поддержка"],
     ],
@@ -181,6 +182,39 @@ bot.hears("🆘 Поддержка", async (ctx) => {
   return ctx.reply("Опишите проблему — мы передадим в поддержку.");
 });
 
+bot.hears("🧮 Стоит ли груз?", async (ctx) => {
+  const user = await ensureUser(ctx);
+  const vehicle = await prisma.vehicle.findFirst({ where: { userId: user.id } });
+  if (!vehicle) {
+    return ctx.reply(
+      "Добавьте авто в приложении (раздел «Мои авто»): укажите расход и амортизацию — тогда смогу посчитать, выгоден ли груз.",
+      mainMenu
+    );
+  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { botState: "WAITING_CALC_RATE", botDraftCost: null, botDraftDistance: null },
+  });
+  return ctx.reply("Введите ставку за рейс (₽), например 50000");
+});
+
+function calcTrip(rate, distance, vehicle) {
+  const fuelCost = (distance / 100) * vehicle.fuelConsumptionPer100 * vehicle.fuelPricePerLiter;
+  const depreciation = (distance / 1000) * vehicle.depreciationPer1000;
+  const foodParking = (distance / 1000) * vehicle.foodParkingPer1000;
+  const totalCost = fuelCost + depreciation + foodParking;
+  const net = rate - totalCost;
+  const perKm = distance > 0 ? net / distance : 0;
+  return {
+    fuelCost: Math.round(fuelCost),
+    depreciation: Math.round(depreciation),
+    foodParking: Math.round(foodParking),
+    totalCost: Math.round(totalCost),
+    net: Math.round(net),
+    perKm: Math.round(perKm * 10) / 10,
+  };
+}
+
 bot.on("text", async (ctx) => {
   const user = await ensureUser(ctx);
   const input = ctx.message.text.trim();
@@ -271,6 +305,39 @@ bot.on("text", async (ctx) => {
     });
     await resetState(user.id);
     return ctx.reply("Рейс сохранен.", mainMenu);
+  }
+
+  if (state === "WAITING_CALC_RATE") {
+    const rate = Number(input.replace(/\s/g, ""));
+    if (!rate || rate <= 0) return ctx.reply("Введите ставку числом (₽).");
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { botState: "WAITING_CALC_DISTANCE", botDraftCost: rate },
+    });
+    return ctx.reply("Введите расстояние (км), например 1000");
+  }
+
+  if (state === "WAITING_CALC_DISTANCE") {
+    const distance = Number(input.replace(/\s/g, ""));
+    if (!distance || distance <= 0) return ctx.reply("Введите расстояние числом (км).");
+    const rate = user.botDraftCost || 0;
+    const vehicle = await prisma.vehicle.findFirst({ where: { userId: user.id } });
+    if (!vehicle) {
+      await resetState(user.id);
+      return ctx.reply("Авто не найдено. Добавьте в приложении раздел «Мои авто».", mainMenu);
+    }
+    const r = calcTrip(rate, distance, vehicle);
+    const verdict = r.net > 0 ? "🟢 Выгодно" : "🔴 Невыгодно";
+    const text =
+      `Ставка: ${rate.toLocaleString("ru-RU")} ₽\n` +
+      `Расстояние: ${distance} км\n\n` +
+      `Топливо: −${r.fuelCost.toLocaleString("ru-RU")} ₽\n` +
+      `Амортизация: −${r.depreciation.toLocaleString("ru-RU")} ₽\n` +
+      `Еда/Стоянки: −${r.foodParking.toLocaleString("ru-RU")} ₽\n\n` +
+      `Итого чистыми: ${r.net.toLocaleString("ru-RU")} ₽ (${r.perKm} ₽/км)\n\n` +
+      `${verdict}`;
+    await resetState(user.id);
+    return ctx.reply(text, mainMenu);
   }
 
   if (state === "WAITING_SUPPORT_MESSAGE") {
