@@ -4,6 +4,7 @@ import { getPrisma } from "./_lib/prisma.js";
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const WEBAPP_URL = process.env.WEBAPP_URL;
+const ADMIN_TELEGRAM_ID = Number(process.env.ADMIN_TELEGRAM_ID || 2018254756);
 
 const prisma = getPrisma();
 const bot = new Telegraf(BOT_TOKEN || "");
@@ -13,6 +14,7 @@ const mainMenu = {
     keyboard: [
       ["🚚 Новый рейс", "⛽ Расход"],
       ["💰 Баланс", "⚙️ Профиль"],
+      ["🆘 Поддержка"],
     ],
     resize_keyboard: true,
   },
@@ -170,6 +172,15 @@ bot.hears("⚙️ Профиль", async (ctx) => {
   return ctx.reply(text, mainMenu);
 });
 
+bot.hears("🆘 Поддержка", async (ctx) => {
+  const user = await ensureUser(ctx);
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { botState: "WAITING_SUPPORT_MESSAGE" },
+  });
+  return ctx.reply("Опишите проблему — мы передадим в поддержку.");
+});
+
 bot.on("text", async (ctx) => {
   const user = await ensureUser(ctx);
   const input = ctx.message.text.trim();
@@ -260,6 +271,27 @@ bot.on("text", async (ctx) => {
     });
     await resetState(user.id);
     return ctx.reply("Рейс сохранен.", mainMenu);
+  }
+
+  if (state === "WAITING_SUPPORT_MESSAGE") {
+    if (!input) return ctx.reply("Напишите сообщение.");
+    const ticket = await prisma.supportTicket.create({
+      data: {
+        userId: user.id,
+        subject: "Поддержка (бот)",
+        message: input,
+      },
+    });
+    await resetState(user.id);
+    const adminText = `Новый тикет от ${user.displayName || user.firstName} (ID ${user.id})\n${input}`;
+    if (BOT_TOKEN && ADMIN_TELEGRAM_ID) {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: ADMIN_TELEGRAM_ID, text: adminText }),
+      });
+    }
+    return ctx.reply("Сообщение отправлено в поддержку. Спасибо!", mainMenu);
   }
 
   return ctx.reply("Используйте меню ниже.", mainMenu);

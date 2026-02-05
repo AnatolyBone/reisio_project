@@ -5,6 +5,8 @@ interface KPICardProps {
   title: string;
   value: string | number;
   icon: ReactNode;
+  onClick?: () => void;
+  className?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -12,7 +14,7 @@ interface KPICardProps {
   variant?: 'default' | 'success' | 'warning' | 'danger';
 }
 
-export function KPICard({ title, value, icon, trend, variant = 'default' }: KPICardProps) {
+export function KPICard({ title, value, icon, trend, variant = 'default', onClick, className }: KPICardProps) {
   const variantStyles = {
     default: 'bg-white dark:bg-gray-800 neutral:bg-stone-50',
     success: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20',
@@ -27,10 +29,11 @@ export function KPICard({ title, value, icon, trend, variant = 'default' }: KPIC
     danger: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400',
   };
 
-  return (
+  const content = (
     <div className={cn(
       "rounded-2xl p-5 border border-gray-100 dark:border-gray-700 neutral:border-stone-200 shadow-sm",
-      variantStyles[variant]
+      variantStyles[variant],
+      className
     )}>
       <div className="flex items-start justify-between">
         <div className="space-y-2">
@@ -54,5 +57,13 @@ export function KPICard({ title, value, icon, trend, variant = 'default' }: KPIC
         </div>
       </div>
     </div>
+  );
+
+  if (!onClick) return content;
+
+  return (
+    <button type="button" onClick={onClick} className="w-full text-left focus:outline-none">
+      {content}
+    </button>
   );
 }

@@ -30,12 +30,13 @@ Mini App для Telegram: ввод данных остается в боте, п
 - `VITE_API_BASE` — базовый путь API (по умолчанию `/api`).
 - `ALLOW_MANUAL_LOGIN` — разрешить вход по Telegram ID (для теста).
 - `WEBAPP_URL` — URL Mini App для кнопки в боте.
+- `ADMIN_TELEGRAM_ID` — Telegram ID администратора для уведомлений.
 
 ## Бэкенд (Netlify Functions + Postgres)
 
 - API размещается в `netlify/functions` и доступно через `/api/*` (redirect в `netlify.toml`).
 - Prisma schema: `prisma/schema.prisma`, миграции: `prisma/migrations`.
-- Локальные данные мигрируют в БД при первом входе.
+- Поддержка: тикеты создаются пользователем и видны в админке.
 
 ## Netlify деплой
 
@@ -56,9 +57,14 @@ src/
 
 ## Примечания
 
-- Данные сохраняются в `localStorage` и инициализируются из `src/data/seedData.ts`.
+- Данные хранятся в Postgres (Supabase) и доступны и боту, и Mini App.
 - Авторизация: Telegram WebApp (авто-вход) или тестовый вход по Telegram ID.
 - Веб-админка доступна для администратора (ID по умолчанию: `2018254756`).
+
+## Первый запуск для пользователя
+
+- На главном экране есть кнопка "Помощь" с краткой инструкцией.
+- Если данных нет, появится блок "Начните с первого шага".
 
 ## Бот (MVP)
 
@@ -81,3 +87,4 @@ src/
    - `https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=https://<YOUR_NETLIFY>/api/bot`
 2. Бот сохраняет расходы/рейсы сразу в Postgres через Prisma.
 3. Состояние диалога хранится в БД (`User.botState`), поэтому работает в Netlify Functions.
+4. При тикетах поддержки админ получает уведомление в Telegram.

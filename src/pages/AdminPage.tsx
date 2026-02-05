@@ -23,6 +23,7 @@ export function AdminPage() {
   const [reminderSettings, setReminderSettings] = useState({ enabled: true, daysBefore: 3 });
   const [admins, setAdmins] = useState<{ userId: number }[]>([]);
   const [knownUsers, setKnownUsers] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!token) return;
@@ -31,10 +32,12 @@ export function AdminPage() {
       fetch(`${API_BASE}/admin-users`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
       fetch(`${API_BASE}/admin-templates`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
       fetch(`${API_BASE}/admin-reminders`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-    ]).then(([adminsData, usersData, templatesData, remindersData]) => {
+      fetch(`${API_BASE}/admin-tickets`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+    ]).then(([adminsData, usersData, templatesData, remindersData, ticketsData]) => {
       setAdmins(adminsData.admins || []);
       setKnownUsers(usersData.users || []);
       setTemplates(templatesData.templates || []);
+      setTickets(ticketsData.tickets || []);
       if (remindersData.settings) {
         setReminderSettings({
           enabled: remindersData.settings.enabled,
@@ -304,6 +307,52 @@ export function AdminPage() {
               className="w-20 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
             />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 neutral:bg-stone-50 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <ClipboardList className="w-5 h-5 text-blue-500" />
+          <h2 className="font-semibold text-gray-900 dark:text-white">Тикеты поддержки</h2>
+        </div>
+        <div className="space-y-3">
+          {tickets.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Тикетов пока нет.</p>
+          )}
+          {tickets.map(ticket => (
+            <div key={ticket.id} className="p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">{ticket.subject}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {ticket.user?.displayName || ticket.user?.firstName || 'Пользователь'} • {new Date(ticket.createdAt).toLocaleString('ru-RU')}
+                  </p>
+                </div>
+                <select
+                  value={ticket.status}
+                  onChange={(e) => {
+                    if (!token) return;
+                    const status = e.target.value;
+                    fetch(`${API_BASE}/admin-tickets`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ id: ticket.id, status }),
+                    }).then(() => {
+                      setTickets(prev => prev.map(item => item.id === ticket.id ? { ...item, status } : item));
+                    });
+                  }}
+                  className="px-2 py-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                >
+                  <option value="open">Открыт</option>
+                  <option value="in_progress">В работе</option>
+                  <option value="closed">Закрыт</option>
+                </select>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">
+                {ticket.message}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 

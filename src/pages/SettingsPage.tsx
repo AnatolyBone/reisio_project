@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor, Bell, BellOff, Calendar, User, MessageSquare, Edit2 } from 'lucide-react';
+import { Sun, Moon, Monitor, Bell, BellOff, Calendar, User, MessageSquare, Edit2, LifeBuoy } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { cn } from '../utils/cn';
 import { Theme } from '../types';
@@ -10,6 +10,8 @@ export function SettingsPage() {
   const { theme, settings, setTheme, updateSettings } = useTheme();
   const { profile, updateProfile } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportForm, setSupportForm] = useState({ subject: '', message: '' });
   const [profileForm, setProfileForm] = useState({
     displayName: profile.displayName,
     role: profile.role,
@@ -220,6 +222,30 @@ export function SettingsPage() {
         </div>
       </div>
 
+      {/* Support */}
+      <div className="bg-white dark:bg-gray-800 neutral:bg-stone-50 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4">
+          Поддержка
+        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <LifeBuoy className="w-5 h-5 text-blue-500" />
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white">Создать тикет</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Напишите вопрос, и администратор ответит.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setSupportOpen(true)}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Написать
+          </button>
+        </div>
+      </div>
+
       {/* App Info */}
       <div className="text-center py-4">
         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -274,6 +300,59 @@ export function SettingsPage() {
             value={profileForm.company}
             onChange={(e) => setProfileForm(prev => ({ ...prev, company: e.target.value }))}
             placeholder="Компания"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        title="Поддержка"
+        isOpen={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setSupportOpen(false)}
+              className="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300"
+            >
+              Отмена
+            </button>
+            <button
+              onClick={() => {
+                const token = localStorage.getItem('fa_token');
+                if (!token) return;
+                fetch(`${import.meta.env.VITE_API_BASE || '/api'}/support`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify(supportForm),
+                }).then(() => {
+                  setSupportForm({ subject: '', message: '' });
+                  setSupportOpen(false);
+                });
+              }}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Отправить
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={supportForm.subject}
+            onChange={(e) => setSupportForm(prev => ({ ...prev, subject: e.target.value }))}
+            placeholder="Тема"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+          />
+          <textarea
+            value={supportForm.message}
+            onChange={(e) => setSupportForm(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Сообщение"
+            rows={4}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
           />
         </div>

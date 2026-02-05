@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { Order, Expense, Payment, Reminder, KPIData } from '../types';
-import { seedOrders, seedExpenses, seedPayments, seedReminders } from '../data/seedData';
 import {
   buildExpenseCategories,
   buildMonthlySeries,
@@ -43,10 +42,10 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 const DATA_KEY = 'fa_data_v1';
 
 const getInitialData = (): AppData => ({
-  orders: seedOrders,
-  expenses: seedExpenses,
-  payments: seedPayments,
-  reminders: seedReminders,
+  orders: [],
+  expenses: [],
+  payments: [],
+  reminders: [],
 });
 
 export function DataProvider({ children }: { children: ReactNode }) {
